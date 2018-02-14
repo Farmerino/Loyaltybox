@@ -28,27 +28,28 @@ The hardware is ready to take its share but my programming skills are very limit
 Hardware description / pinout:
 
 4x20 LCD module:
-RS: Arduino pin 13
-RW: Ground
-E: Arduino pin 12
-D4-D7: Arduino pins A0 - A3
+- RS: Arduino pin 13
+- RW: Ground
+- E: Arduino pin 12
+- D4-D7: Arduino pins A0 - A3
 
 3x4 numeric keypad:
-3 columns to Arduino pins 8,9,10
-4 rows to Arduino pins 5,4,3,2
+- 3 columns to Arduino pins 8,9,10
+- 4 rows to Arduino pins 5,4,3,2
 
 RFID reader (type RDM6300 125kHz reader):
-TX to Arduino pin 6
-RX is floating (but in software is mapped to Arduino pin 7 due to SoftwareSerial requirements)
+- TX to Arduino pin 6
+- RX is floating (but in software is mapped to Arduino pin 7 due to SoftwareSerial requirements)
 
 Real time clock (DS3231 module with 32kbit EEPROM and 200 Ohm resistor removed to save the CR 2032 button cell):
-I2C clock chip read address: 0xD0
-I2C clock chip write address: 0xD1
-I2C 32kb EEPROM read address: 0xAE
-I2C 32kb EEPROM write address: 0xAF
+- I2C clock chip read address: 0xD0
+- I2C clock chip write address: 0xD1
+- I2C 32kb EEPROM read address: 0xAE
+- I2C 32kb EEPROM write address: 0xAF
 
 64kByte EEPROM (24LC512):
-I2C read address: 0xA8
-I2C write address: 0xA9
+- I2C read address: 0xA8
+- I2C write address: 0xA9
 
-Beeper (fix frequency beeper, so no tone() is required/can be used): Arduino pin 11
+Beeper (fix frequency beeper, so no tone() is required/can be used):
+- Arduino pin 11
