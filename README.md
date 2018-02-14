@@ -53,3 +53,15 @@ Real time clock (DS3231 module with 32kbit EEPROM and 200 Ohm resistor removed t
 
 Beeper (fix frequency beeper, so no tone() is required/can be used):
 - Arduino pin 11
+
+Software layout (crude version):
+
+Setup() should do what setup() does best: variable definition/initialization. After it's done it should read and display the actual date and time from the clock module and ask the user whether he/she would like to setup/correct the time or not. Setup() should wait for operator answer (keying say # on the keypad) for a few secs then assume that the date/time is OK if no keypress was detected during this time. Then it should refresh the LCD with a greeting or something and allow program flow to enter the main loop(). In case the "#" key was pressed then should call the clock setup routine and after the setup was completed should enter the main loop().
+
+The loop() should check the RFID module and the keys.
+
+If the RFID module would output a valid card ID without a previously keyed-in end price (say "1234#") then it should look this ID up in the database (external EEPROM). If there was a match (the card is already known by the system) then it should display a few useful things associated to this particular ID. E.g.: the ID of the card, the date it was last seen, etc. but otherwise do nothing.)
+
+If the card ID was not found in the database then only display this ID.
+
+If a price was entered (string (?) say "12345#" where "#"after the digits means "end of input") it should be converted to unsigned integer (without the "#" of course, holding capacity of an uint should be plenty, unlikely I would sell more than 65535 or more worth of vegetables at a time to any of my customers). After this conversion there is a time window opening say for 10-15 secs while the system waits for the customer to get her/his card read by the RFID module. If this window closes and no card had been read then the display should be cleared and the loop() should resume normal operation. 
