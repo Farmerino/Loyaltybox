@@ -64,4 +64,15 @@ If the RFID module would output a valid card ID without a previously keyed-in en
 
 If the card ID was not found in the database then only display this ID.
 
-If a price was entered (string (?) say "12345#" where "#"after the digits means "end of input") it should be converted to unsigned integer (without the "#" of course, holding capacity of an uint should be plenty, unlikely I would sell more than 65535 or more worth of vegetables at a time to any of my customers). After this conversion there is a time window opening say for 10-15 secs while the system waits for the customer to get her/his card read by the RFID module. If this window closes and no card had been read then the display should be cleared and the loop() should resume normal operation. 
+If a price was entered (keyed-in say "12345#" where "#"after the digits means "end of input") it should be converted to unsigned integer (without the "#" of course, holding capacity of an uint should be plenty, unlikely I would sell more than 65535 or more bucks worth of vegetables at a time to any of my customers). After this conversion there is a time window open say for 10-15 secs while the system waits for the customer to get her/his card read by the RFID module. If it time-outs and no card had been read then the display should be cleared and the loop() should resume normal operation.
+
+If a tag was read its ID should be matched against the database. If a match found: known card, recurrent customer, calculate the oh-so-awaited discount, display it on the LCD, refresh the database. After a few more secs clear the display and show the default greetings and wait for a new customer.
+
+If a match was not found then this is a first time use of the given loyalty card. Give the customer the first-time-use bonus (if there's any) then refresh the database, etc.
+
+
+If I make a typo in entering the end price there should be a mechanisms for correcting the entered value. Pressing "*" after a digit should mean "backspace". Repeated pressing should delete another digit, and so on, until there's nothing left.
+
+Starting the keying with "*" should mean "entering special system command". Such a command should have a general syntax as "*1234#", where 1234 is an arbitrary four digit code for a command and # is the end of input char.
+
+Such a system command could be used for updating the clock at anytime or initiate a database dump via the USB cable, or something even more useful act.
