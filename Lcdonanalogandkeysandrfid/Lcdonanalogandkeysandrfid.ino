@@ -248,7 +248,8 @@ void loop() {
               lcd.print("0");
               lcd.print(sec);
             }
-            lcd.setCursor(1,3);
+            lcd.setCursor(0,3);
+            lcd.print("X");
             
             break;
     
@@ -268,7 +269,6 @@ void loop() {
           }
           else
           {
-            datetimeenter = false;
             sec = enteredvalue % 100;
             enteredvalue = enteredvalue / 100;
             minute = enteredvalue % 100;
@@ -280,18 +280,20 @@ void loop() {
             month = enteredvalue % 100;
             enteredvalue = enteredvalue / 100;
             year = enteredvalue;
+            enteredvalue = 0;
             if (day < 32 && day > 0 && month < 13 && month >0 && year > 17 && sec < 60 && minute < 60 && hour < 24 )
             {
               rtc.set(sec, minute, hour, 1, day, month, year);
               //  RTCLib::set(byte second, byte minute, byte hour, byte dayOfWeek, byte dayOfMonth, byte month, byte year)
+              datetimeenter = false;
+              break;
             }
-            break;
           }
-          break;
+          // break;
         }
         else
         {
-          lcd.setCursor(10,2);
+          lcd.setCursor(10,2); //we entered a price value
           lcd.print("OK   ");
           enteredvalue = 0;
           break;
@@ -314,6 +316,7 @@ void loop() {
         }
         else        // we are entering a yy/mm/dd/hh/mm/ss value
         {
+          lcd.setCursor(1,3);
           enteredvalue = enteredvalue * 10 + (key - '0');
           lcd.print(enteredvalue);
         }
