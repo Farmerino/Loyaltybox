@@ -41,6 +41,7 @@
 */
 
 // include the library code:
+
 #include <LiquidCrystal.h>
 #include <Keypad.h>
 #include <SoftwareSerial.h>
@@ -73,13 +74,17 @@ Keypad kpd = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
 
 SoftwareSerial RFID(6, 7); // RX and TX
 
+uRTCLib rtc(0x68, 0x57);
+
 int i = 0;
 long previousmillis = 0;
 byte shorttimer = 100;
-word midtimer = 5000;
+word midtimer = 8000;
 long longtimer = 15000;
-unsigned int enteredvalue = 0;
-boolean setupmode = false;
+long enteredvalue = 0;
+boolean syscommandmode = false;
+boolean datetimeenter = false;
+
 
 void setup() {
   // set up the LCD's number of columns and rows:
@@ -90,24 +95,19 @@ void setup() {
   
   pinMode(beeppin,OUTPUT);
   digitalWrite(beeppin, LOW);
-  
+  Wire.begin();
   RFID.begin(9600);    // start serial to RFID reader
   Serial.begin(9600);  // start serial to PC 
 }
 
 void loop() {
-  // set the cursor to column 0, line 1
-  // (note: line 1 is the second row, since counting begins with 0):
-  lcd.setCursor(0, 1);
-  // print the number of seconds since reset:
-  lcd.print(millis() / 1000);
-
+  
   unsigned long currentmillis = millis();
   if (currentmillis - previousmillis > shorttimer)
   {
     digitalWrite(beeppin,LOW);
   }
-  if (currentmillis - previousmillis > midtimer)
+  if (currentmillis - previousmillis > midtimer && datetimeenter == false)
   {
     lcd.setCursor(10,2);
     lcd.print("     ");
@@ -116,7 +116,7 @@ void loop() {
 
   
   char key = kpd.getKey();
-
+  byte day,month,year,hour,minute,sec;
 
   if(key)  // Check for a valid key.
   {
@@ -125,39 +125,131 @@ void loop() {
       case '*':
         digitalWrite(beeppin, HIGH);
         previousmillis = currentmillis;
-        if (enteredvalue == 0 && setupmode == true)
+        if (enteredvalue == 0 && syscommandmode == true && datetimeenter == false)
         {
-          setupmode = false;
+          syscommandmode = false;
           lcd.setCursor(9,2);
           lcd.print(" ");
           break;
         }
-        else if (enteredvalue == 0 && setupmode == false)
+        else if (enteredvalue == 0 && syscommandmode == false && datetimeenter == false)
         {
-          setupmode = true;
+          syscommandmode = true;
           lcd.setCursor(9,2);
           lcd.print("*");
           break;
         }
-        else 
+        if (enteredvalue > 0 && datetimeenter == false)
         {
-        enteredvalue = enteredvalue / 10;
-        lcd.setCursor(10,2);
-        lcd.print("     ");
-        lcd.setCursor(10,2);
-        lcd.print(enteredvalue);
-        break;
+          enteredvalue = enteredvalue / 10;
+          lcd.setCursor(10,2);
+          lcd.print("     ");
+          lcd.setCursor(10,2);
+          lcd.print(enteredvalue);
+          break;
         }
-        
+        else if (enteredvalue > 0 && datetimeenter == true)
+        {
+          enteredvalue = enteredvalue / 10;
+          lcd.setCursor(1,3);
+          lcd.print("            ");
+          lcd.setCursor(1,3);
+          lcd.print(enteredvalue);
+          break;
+        }
         
       case '#':
         digitalWrite(beeppin, HIGH);
         previousmillis = currentmillis;
-        if (setupmode == true)
+        if (syscommandmode == true && datetimeenter == false)
         {
           switch (enteredvalue)
           {
             case 65432:             //set time
+            datetimeenter = true;
+            enteredvalue = 0;
+            rtc.refresh();
+            
+            
+    /*        Serial.print("RTC DateTime: ");
+            Serial.print(rtc.year());
+            Serial.print('/');
+            Serial.print(rtc.month());
+            Serial.print('/');
+            Serial.print(rtc.day());
+            Serial.print(' ');
+            Serial.print(rtc.hour());
+            Serial.print(':');
+            Serial.print(rtc.minute());
+            Serial.print(':');
+            Serial.print(rtc.second());
+            Serial.println(); 
+    */    
+            day = rtc.day();
+            month = rtc.month();
+            year = rtc.year();
+            hour = rtc.hour();
+            minute = rtc.minute();
+            sec = rtc.second();
+
+            lcd.clear();
+            lcd.setCursor(1, 0);
+            lcd.print("Set DATE and TIME");
+            lcd.setCursor(1,1);
+            lcd.print("YY/MM/DD/hh/mm/ss");
+            lcd.setCursor(1,2);
+            if (year < 10)
+            {
+              lcd.print("0");
+              lcd.print(year);
+            }
+            else
+            {
+              lcd.print(year);
+            }
+            if (month < 10)
+            {
+              lcd.print("0");
+              lcd.print(month);
+            }
+            else
+            {
+              lcd.print(month);
+            }
+            if (day < 10)
+            {
+              lcd.print("0");
+              lcd.print(day);
+            }
+            else
+            {
+              lcd.print(day);
+            }
+            if (hour < 10)
+            {
+              lcd.print("0");
+              lcd.print(hour);
+            }
+            else
+            {
+              lcd.print(hour);
+            }
+            if (minute < 10)
+            {
+              lcd.print("0");
+              lcd.print(minute);
+            }
+            else
+            {
+              lcd.print(minute);
+            }
+            if (sec < 10)
+            {
+              lcd.print("0");
+              lcd.print(sec);
+            }
+            lcd.setCursor(1,3);
+            
             break;
     
             case 61234:             //do something else
@@ -166,10 +258,35 @@ void loop() {
             digitalWrite(beeppin, LOW);
             break;
           }
-          setupmode = false;
-          lcd.setCursor(9,2);
-          lcd.print("      ");
-          enteredvalue = 0;
+          if (datetimeenter == false)
+          {
+            syscommandmode = false;   //undefined syscommand received
+            lcd.setCursor(9,2);       //deleting it, clearing this field of the lcd
+            lcd.print("      ");
+            enteredvalue = 0;
+            break;
+          }
+          else
+          {
+            datetimeenter = false;
+            sec = enteredvalue % 100;
+            enteredvalue = enteredvalue / 100;
+            minute = enteredvalue % 100;
+            enteredvalue = enteredvalue / 100;
+            hour = enteredvalue % 100;
+            enteredvalue = enteredvalue / 100;
+            day = enteredvalue % 100;
+            enteredvalue = enteredvalue / 100;
+            month = enteredvalue % 100;
+            enteredvalue = enteredvalue / 100;
+            year = enteredvalue;
+            if (day < 32 && day > 0 && month < 13 && month >0 && year > 17 && sec < 60 && minute < 60 && hour < 24 )
+            {
+              rtc.set(sec, minute, hour, 1, day, month, year);
+              //  RTCLib::set(byte second, byte minute, byte hour, byte dayOfWeek, byte dayOfMonth, byte month, byte year)
+            }
+            break;
+          }
           break;
         }
         else
@@ -181,17 +298,25 @@ void loop() {
         }
         
       default:
-        lcd.setCursor(10, 2);
-        if (enteredvalue < 6553)
-          {
-            enteredvalue = enteredvalue * 10 + (key - '0');
-          }
-          if (enteredvalue < 10) //to erase the "K" from "OK", because it is ugly
-          {
-            lcd.print("  ");     //if left unerased
-            lcd.setCursor(10,2); //reposition the cursor before printing
-          }
-        lcd.print(enteredvalue);
+        if (datetimeenter == false)     // we are entering a price
+        {
+          lcd.setCursor(10, 2);
+          if (enteredvalue < 6553)
+            {
+              enteredvalue = enteredvalue * 10 + (key - '0');
+            }
+            if (enteredvalue < 10) //to erase the "K" from "OK", because it is ugly
+            {
+              lcd.print("  ");     //if left unerased
+              lcd.setCursor(10,2); //reposition the cursor before printing
+            }
+          lcd.print(enteredvalue);
+        }
+        else        // we are entering a yy/mm/dd/hh/mm/ss value
+        {
+          enteredvalue = enteredvalue * 10 + (key - '0');
+          lcd.print(enteredvalue);
+        }
         previousmillis = currentmillis;
     }
   
